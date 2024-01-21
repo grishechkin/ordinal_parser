@@ -2,12 +2,22 @@ package parser;
 
 import expressions.*;
 
+import java.util.Map;
+
 public class ExpressionParser {
     public Expression parse(String expression) {
         return new Parser(expression).parseAllExpression();
     }
 
     private static class Parser extends BaseParser {
+        private static final Map<Character, Operation> SYMBOL_TO_OPERATION = Map.of(
+                '+', Operation.ADD,
+                '*', Operation.MULTIPLY,
+                '^', Operation.POW);
+        private static final Map<Operation, Integer> OPERATION_PRIORITY = Map.of(
+                Operation.ADD, 0,
+                Operation.MULTIPLY, 1,
+                Operation.POW, 2);
         private Operation nextOperation = Operation.UNKNOWN;
 
         public Parser(String expression) {
@@ -72,12 +82,7 @@ public class ExpressionParser {
         }
 
         private int getPriority(Operation operation) {
-            return switch (operation) {
-                case ADD -> 0;
-                case MULTIPLY -> 1;
-                case POW -> 2;
-                default -> Integer.MAX_VALUE;
-            };
+            return OPERATION_PRIORITY.getOrDefault(operation, Integer.MAX_VALUE);
         }
 
         private void checkEOFExpression() {
@@ -111,12 +116,15 @@ public class ExpressionParser {
 
         private BinaryExpression getBinaryExpression(Operation operation,
                                                      Expression first, Expression second) {
-            return switch (operation) {
-                case ADD -> new Add(first, second);
-                case MULTIPLY -> new Multiply(first, second);
-                case POW -> new Power(first, second);
-                default -> throw error("Unsupported binary operation");
-            };
+            BinaryExpression result;
+            if (operation == Operation.ADD) {
+                result = new Add(first, second);
+            } else if (operation == Operation.MULTIPLY) {
+                result = new Multiply(first, second);
+            } else {
+                result = new Power(first, second);
+            }
+            return result;
         }
 
         private void takeOperation() {
@@ -125,12 +133,7 @@ public class ExpressionParser {
         }
 
         private void updateNextOperation() {
-            nextOperation = switch (test()) {
-                case '+' -> Operation.ADD;
-                case '*' -> Operation.MULTIPLY;
-                case '^' -> Operation.POW;
-                default -> Operation.UNKNOWN;
-            };
+            nextOperation = SYMBOL_TO_OPERATION.getOrDefault(test(), Operation.UNKNOWN);
         }
 
         private Operation testOperation() {

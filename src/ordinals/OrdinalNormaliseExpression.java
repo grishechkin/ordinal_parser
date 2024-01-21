@@ -51,10 +51,6 @@ public class OrdinalNormaliseExpression {
         return get(size() - 1);
     }
 
-    private void removeFirst() {
-        elements.remove(0);
-    }
-
     private void removeLast() {
         elements.remove(size() - 1);
     }
@@ -97,18 +93,8 @@ public class OrdinalNormaliseExpression {
         return this.concatenate(other) == 0;
     }
 
-    private OrdinalNormaliseExpression getC() {
-        if (getLast().getW().isZero()) {
-            return new OrdinalNormaliseExpression(elements.subList(0, size() - 1));
-        }
-        return new OrdinalNormaliseExpression(this);
-    }
-
-    private Element getM() {
-        if (getLast().getW().isZero()) {
-            return new Element(getLast());
-        }
-        return new Element(new OrdinalNormaliseExpression(), 0);
+    private boolean isFinite() {
+        return getFirst().getW().isZero();
     }
 
     public static OrdinalNormaliseExpression add(final OrdinalNormaliseExpression first, final OrdinalNormaliseExpression second) {
@@ -189,6 +175,14 @@ public class OrdinalNormaliseExpression {
             if (!result.getFirst().getW().isZero()) {
                 result.getFirst().setW(multiply(result.getFirst().getW(), element));
             } else if (result.getFirst().getA() != 1) {
+                if (element.getW().isFinite()) {
+                    int bj = element.getW().getFirst().getA() - 1;
+                    if (bj == 0) {
+                        element.setW(new OrdinalNormaliseExpression());
+                    } else {
+                        element.setW(new OrdinalNormaliseExpression(bj));
+                    }
+                }
                 result = power(new OrdinalNormaliseExpression("w"), element);
             }
             result.getFirst().setA(1);
